@@ -6,10 +6,10 @@ const routes = [
     path: "/",
     name: "pay",
     component: Layout,
-    redirect: "/pay/error",
+    redirect: "pay/error",
     children: [
       {
-        path: "/pay/checkout/:id",
+        path: "pay/checkout/:id",
         name: "checkout",
         component: Demo,
         meta: {
@@ -17,29 +17,12 @@ const routes = [
         }
       },
       {
-        path: "tools",
-        name: "Tools",
-        component: () => import("@/views/tools/index.vue"),
-        meta: {
-          title: "工具"
-        }
-      },
-      {
-        path: "about",
-        name: "About",
-        component: () => import("@/views/about/index.vue"),
-        meta: {
-          title: "关于",
-          noCache: true
-        }
-      },
-      {
-        path: "/pay/expired",
+        path: "pay/expired",
         name: "pay/expired",
         component: () => import("@/views/404.vue"),
       },
       {
-        path: "/pay/error",
+        path: "pay/error",
         name: "pay/error",
         component: () => import("@/views/error.vue"),
       }
