@@ -6,7 +6,7 @@ const routes = [
     path: "/",
     name: "pay",
     component: Layout,
-    redirect: { name: "pay/checkout/:id" },
+    redirect: "/pay/error",
     children: [
       {
         path: "/pay/checkout/:id",

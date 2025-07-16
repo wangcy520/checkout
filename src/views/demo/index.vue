@@ -19,7 +19,7 @@
     <div class="text-3xl font-bold text-blue-700 mb-6">₹{{ deepLinks.orderAmount }}</div>
 
     <!-- Payment Methods -->
-    <div class="bg-white rounded-xl  p-4 space-y-4">
+    <div class="bg-white rounded-xl  p-4 space-y-4" v-if="types == 0">
       <h2 class="text-base font-semibold text-gray-800 mb-2">Select payment method</h2>
       <a :href="deepLinks.deepLink.paytm" v-if="deepLinks.deepLink && deepLinks.deepLink.paytm">
         <div
@@ -53,20 +53,21 @@
         </div>
       </a>
     </div>
-    <!-- <div class="bg-white rounded-xl  p-4 space-y-4">
+    <div class="bg-white rounded-xl  p-4 space-y-4" v-if="types == 1">
       <h2 class="text-base font-semibold text-gray-800 mb-2">Select payment method</h2>
       <div class="flex justify-center items-center p-3 rounded-lg border">
-        <div class=" w-40 h-40 border border-[#ccc] rounded-xl"></div>
+        <div class=" w-40 h-40 border border-[#ccc] rounded-xl">
+          <img :src="qrisContent" alt="">
+        </div>
       </div>
       <div class="flex justify-center items-center">
         <van-button type="primary">sava</van-button>
       </div>
-    </div> -->
+    </div>
     <div v-if="loading" class="__spinner-container">
       <van-loading size="50px" vertical>loading...</van-loading>
     </div>
   </div>
-
 </template>
 
 <script setup>
@@ -82,6 +83,8 @@ let statusTimer = null; // 新增定时器变量
 let leftSeconds = ref(0);
 const deepLinks = ref({});
 const loading = ref(true);
+const types = ref(0);
+const qrisContent = ref('');
 
 const formatTime = (seconds) => {
   const min = Math.floor(seconds / 60);
@@ -97,6 +100,8 @@ onMounted(() => {
     if (res.code == 200) {
       sessionStorage.setItem('pay_meony', res.data.orderAmount);
       deepLinks.value = res.data;
+      types.value = res.type || 0; // 默认类型为 0
+      qrisContent.value = res.qrisContent;
       leftSeconds.value = Number(res.expire);
       timeStr.value = formatTime(leftSeconds.value);
       timer = setInterval(() => {
@@ -120,8 +125,11 @@ onMounted(() => {
           }
         });
       }, 2000);
+    } else if (res.code == 401) {
+      router.replace('/pay/expired');
+    } else if (res.code == null) {
+      router.replace('/pay/error');
     }
-    // 其他情况...
   });
 });
 
