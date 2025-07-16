@@ -4,13 +4,13 @@ import Demo from "@/views/demo/index.vue";
 const routes = [
   {
     path: "/",
-    name: "root",
+    name: "pay",
     component: Layout,
-    redirect: { name: "index" },
+    redirect: { name: "pay/checkout/:id" },
     children: [
       {
-        path: "index/:id",
-        name: "index",
+        path: "/pay/checkout/:id",
+        name: "checkout",
         component: Demo,
         meta: {
           title: "主页"
@@ -34,15 +34,20 @@ const routes = [
         }
       },
       {
-        path: "404",
-        name: "404",
+        path: "/pay/expired",
+        name: "pay/expired",
+        component: () => import("@/views/404.vue"),
+      },
+      {
+        path: "/pay/error",
+        name: "pay/error",
         component: () => import("@/views/error.vue"),
       }
     ]
   },
   {
     path: "/:pathMatch(.*)*",
-    redirect: "/404"
+    redirect: "/pay/error"
   }
 ];
 

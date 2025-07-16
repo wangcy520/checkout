@@ -6,7 +6,12 @@ export function payInr(code) {
     method: "post",
   });
 }
-
+export function statusTnr(code) {
+  return http.request({
+    url: "/status/inr/" + code,
+    method: "post",
+  });
+}
 export function getListApiError(params) {
   return http.request({
     url: "/list/error",

@@ -16,40 +16,43 @@
     </div>
 
     <!-- Amount -->
-    <div class="text-3xl font-bold text-blue-700 mb-6">₹{{ deepLink.orderAmount }}</div>
+    <div class="text-3xl font-bold text-blue-700 mb-6">₹{{ deepLinks.orderAmount }}</div>
 
     <!-- Payment Methods -->
     <div class="bg-white rounded-xl  p-4 space-y-4">
       <h2 class="text-base font-semibold text-gray-800 mb-2">Select payment method</h2>
-      <div
-        class="flex justify-between items-center p-3 rounded-lg border border-[#4c9fe3] hover:text-blue-700 cursor-pointer transition-all"
-        @click="toPage('phonepe')">
-        <div class="flex items-center space-x-3">
-          <img src="@/assets/PhonePe.svg" alt="SVG Image" class="w-full h-auto" />
-          <span class="font-medium text-gray-800">{{ name }}</span>
+      <a :href="deepLinks.deepLink.paytm" v-if="deepLinks.deepLink && deepLinks.deepLink.paytm">
+        <div
+          class="flex justify-between items-center p-3 rounded-lg border border-[#4c9fe3] hover:text-blue-700 cursor-pointer transition-all">
+          <div class="flex items-center space-x-3">
+            <img src="@/assets/paytm.svg" alt="SVG Image" class="w-full h-auto" />
+            <!-- <span class="font-medium text-gray-800">{{ name }}</span> -->
+          </div>
+          <img class="w-12 h-12" src="@/assets/long press.png" alt="">
         </div>
-        <img class="w-12 h-12" src="@/assets/long press.png" alt="">
-      </div>
-      <div
-        class="flex justify-between items-center p-3 rounded-lg border border-[#4c9fe3] hover:text-blue-700 cursor-pointer transition-all"
-        @click="toPage('paytm')">
-        <div class="flex items-center space-x-3">
-          <img src="@/assets/paytm.svg" alt="SVG Image" class="w-full h-auto" />
-          <span class="font-medium text-gray-800">{{ name }}</span>
+      </a>
+      <a :href="deepLinks.deepLink.phonepe" v-if="deepLinks.deepLink && deepLinks.deepLink.phonepe" class="p-3">
+        <div
+          class="flex justify-between items-center p-3 rounded-lg border border-[#4c9fe3] hover:text-blue-700 cursor-pointer transition-all">
+          <div class="flex items-center space-x-3">
+            <img src="@/assets/PhonePe.svg" alt="SVG Image" class="w-full h-auto" />
+            <!-- <span class="font-medium text-gray-800">{{ name }}</span> -->
+          </div>
+          <img class="w-12 h-12" src="@/assets/long press.png" alt="">
         </div>
-        <img class="w-12 h-12" src="@/assets/long press.png" alt="">
-      </div>
-      <div
-        class="flex justify-between items-center p-3 rounded-lg border border-[#4c9fe3] hover:text-blue-700 cursor-pointer transition-all"
-        @click="toPage('upi')">
-        <div class="flex items-center space-x-3">
-          <img src="@/assets/upi.svg" alt="SVG Image" class="w-full h-auto" />
-          <span class="font-medium text-gray-800">{{ name }}</span>
-        </div>
-        <img class="w-12 h-12" src="@/assets/long press.png" alt="">
-      </div>
-    </div>
+      </a>
 
+      <a :href="deepLinks.deepLink.upi" v-if="deepLinks.deepLink && deepLinks.deepLink.upi">
+        <div
+          class="flex justify-between items-center p-3 rounded-lg border border-[#4c9fe3] hover:text-blue-700 cursor-pointer transition-all">
+          <div class="flex items-center space-x-3">
+            <img src="@/assets/upi.svg" alt="SVG Image" class="w-full h-auto" />
+            <!-- <span class="font-medium text-gray-800">{{ name }}</span> -->
+          </div>
+          <img class="w-12 h-12" src="@/assets/long press.png" alt="">
+        </div>
+      </a>
+    </div>
     <!-- <div class="bg-white rounded-xl  p-4 space-y-4">
       <h2 class="text-base font-semibold text-gray-800 mb-2">Select payment method</h2>
       <div class="flex justify-center items-center p-3 rounded-lg border">
@@ -59,31 +62,26 @@
         <van-button type="primary">sava</van-button>
       </div>
     </div> -->
+    <div v-if="loading" class="__spinner-container">
+      <van-loading size="50px" vertical>loading...</van-loading>
+    </div>
   </div>
+
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import { payInr } from "@/api/mock";
+import { ref, onMounted, onUnmounted } from "vue";
+import { payInr, statusTnr } from "@/api/mock";
 import { useRoute, useRouter } from 'vue-router'
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 const timeStr = ref('00:00');
 let timer = null;
+let statusTimer = null; // 新增定时器变量
 let leftSeconds = ref(0);
-const deepLink = ref({});
-
-
-const toPage = (code) => {
-  if (code == 'phonepe') {
-    window.location.href(deepLink.value.deepLink.phonepe);
-  } else if (code == 'paytm') {
-    window.location.href(deepLink.value.deepLink.paytm);
-  } else if (code == 'upi') {
-    window.location.href(deepLink.value.deepLink.upi);
-  }
-};
+const deepLinks = ref({});
+const loading = ref(true);
 
 const formatTime = (seconds) => {
   const min = Math.floor(seconds / 60);
@@ -91,25 +89,63 @@ const formatTime = (seconds) => {
   return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
 };
 
-
 onMounted(() => {
-  timeStr.value = formatTime(300);
-  timer = setInterval(() => {
-    if (leftSeconds.value > 0) {
-      leftSeconds.value--;
-      timeStr.value = formatTime(leftSeconds.value);
-    } else {
-      clearInterval(timer);
-    }
-  }, 1000);
   let code = route.params.id;
+  sessionStorage.setItem('pay_code', code);
   payInr(code).then((res) => {
+    loading.value = false;
     if (res.code == 200) {
-      deepLink.value = res.data;
-      timeStr.value = formatTime(300); // 转换时间
-    }
-  });
+      sessionStorage.setItem('pay_meony', res.data.orderAmount);
+      deepLinks.value = res.data;
+      leftSeconds.value = Number(res.expire);
+      timeStr.value = formatTime(leftSeconds.value);
+      timer = setInterval(() => {
+        if (leftSeconds.value > 0) {
+          leftSeconds.value--;
+          timeStr.value = formatTime(leftSeconds.value);
+          if (leftSeconds.value === 5) {
+            router.replace('/pay/expired');
+          }
+        } else {
+          clearInterval(timer);
+        }
+      }, 1000);
 
+      // 每两秒执行一次 statusTnr
+      statusTimer = setInterval(() => {
+        statusTnr(code).then((statusRes) => {
+          // 这里可以处理 statusRes 的结果
+          if (statusRes.status != null && statusRes.status == '2') {
+            window.location.href = statusRes.returnUrl;
+          }
+        });
+      }, 2000);
+    }
+    // 其他情况...
+  });
+});
+
+// 页面卸载时清除定时器
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
+  if (statusTimer) clearInterval(statusTimer);
 });
 </script>
-<style scoped></style>
+<style scoped>
+.__spinner-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  /* 黑色半透明背景 */
+  z-index: 9999;
+}
+</style>
